@@ -39,12 +39,22 @@ class QueryResponse(BaseModel):
 # Endpoint to interact with OpenAI API
 @app.post("/query", response_model=QueryResponse)
 async def query_openai(request: QueryRequest):
+    prompt = "Is the following question relevant to data analysis of an uplaoded dataset? Respond with just 'yes' or 'no'.\n\n Here is the question:" + request.prompt
     try:
         response = client.chat.completions.create(
         model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": request.prompt}]
+        messages=[{"role": "user", "content": prompt}]
         )
         response_text = response.choices[0].message.content.strip()
+        if "yes" in response_text.lower():
+            response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": request.prompt}]
+            )
+            response_text = response.choices[0].message.content.strip()
+        else:
+            response_text = f"The question \"{request.prompt}\" is not relevant to the dataset. It does not pertain to any data analysis or visualization tasks."
+        
         return QueryResponse(response=response_text)
     except:
         return QueryResponse(response="I’m a simple bot. I don’t have real responses yet!")
