@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import userAvatar from './images/user-avatar.jpg';
 import botAvatar from './images/bot-avatar.jpg';
-import Papa from 'papaparse'; // CSV parsing library
+import * as d3 from 'd3-dsv'; // Import d3-dsv for CSV parsing
+import { VegaLite } from 'react-vega'; // Import Vega-Lite component
 
 const url = process.env.NODE_ENV === 'production' ? 'https://course-tools-demo.onrender.com/' : 'http://127.0.0.1:8000/';
 
@@ -27,7 +28,7 @@ function App() {
     if (message === "") return;
 
     const newMessage = { type: "user", text: message };
-
+    setResponse([...response, newMessage]);
     fetch(`${url}query`, {
       method: 'POST',
       body: JSON.stringify({ prompt: message }),
@@ -36,7 +37,14 @@ function App() {
       .then(response => response.json())
       .then(data => {
         const botResponse = { type: "bot", text: data.response };
-        setResponse([...response, newMessage, botResponse]);
+
+        // If the chart spec is included in the response, add it to the response array
+        if (data.chart) {
+          const botChartResponse = { type: "bot-chart", chartSpec: data.chart }; // Custom message type for charts
+          setResponse([...response, newMessage, botChartResponse, botResponse]);
+        } else {
+          setResponse([...response, newMessage, botResponse]);
+        }
       });
 
     setMessage("");
@@ -67,10 +75,6 @@ function App() {
         body: formData,
       })
         .then(response => response.json())
-        // .then(data => {
-        //   const botResponse = { type: "bot", text: data.message};
-        //   setResponse([...response, botResponse]);
-        // })
         .catch(() => {
           const botResponse = { type: "bot", text: "Error processing file." };
           setResponse([...response, botResponse]);
@@ -78,14 +82,17 @@ function App() {
     }
   }
 
-  // Parse CSV file and store data in state
+  // Parse CSV file and store data in state using d3-dsv
   function parseCSV(file) {
-    Papa.parse(file, {
-      complete: function (results) {
-        setCsvData(results.data);
-      },
-      header: true,
-    });
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const text = e.target.result;
+      const parsedData = d3.csvParse(text, d3.autoType); // Parse CSV and auto convert types
+      setCsvData(parsedData.slice(0, 50)); // Store only the first 50 rows for preview
+    };
+
+    reader.readAsText(file);
   }
 
   const handleDrag = (e) => {
@@ -181,7 +188,13 @@ function App() {
               className="avatar"
             />
             <div className="message-bubble">
-              <span>{msg.text}</span>
+              {msg.type === "bot-chart" ? (
+                <div className="bot-chart-message">
+                  <VegaLite spec={msg.chartSpec} /> {/* Render Vega-Lite chart for bot-chart messages */}
+                </div>
+              ) : (
+                <span>{msg.text}</span>
+              )}
             </div>
           </div>
         ))}
