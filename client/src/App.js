@@ -29,6 +29,7 @@ function App() {
 
     const newMessage = { type: "user", text: message };
     setResponse([...response, newMessage]);
+
     fetch(`${url}query`, {
       method: 'POST',
       body: JSON.stringify({ prompt: message }),
@@ -58,8 +59,20 @@ function App() {
     if (e.key === 'Enter') sendMessage();
   }
 
+  // Check if the uploaded file is a CSV
+  function isCSV(file) {
+    return file && file.type === 'text/csv';
+  }
+
   function handleFileUpload(e) {
     const uploadedFile = e.target.files[0];
+    
+    if (!isCSV(uploadedFile)) {
+      const botResponse = { type: "bot", text: "Error: Please upload a valid CSV file." };
+      setResponse([...response, botResponse]);
+      return;
+    }
+
     setFile(uploadedFile);
     parseCSV(uploadedFile);
     sendFile(uploadedFile); // Automatically send file to backend after upload
@@ -111,12 +124,19 @@ function App() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const droppedFile = e.dataTransfer.files[0];
-      setFile(droppedFile);
-      parseCSV(droppedFile);
-      sendFile(droppedFile); // Automatically send file to backend after drop
+
+    const droppedFile = e.dataTransfer.files[0];
+
+    // Check if dropped file is a CSV
+    if (!isCSV(droppedFile)) {
+      const botResponse = { type: "bot", text: "Error: Please upload a valid CSV file." };
+      setResponse([...response, botResponse]);
+      return;
     }
+
+    setFile(droppedFile);
+    parseCSV(droppedFile);
+    sendFile(droppedFile); // Automatically send file to backend after drop
   };
 
   const handleClick = () => {
