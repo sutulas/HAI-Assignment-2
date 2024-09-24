@@ -1,4 +1,4 @@
-Repo for first HAI course assignment
+Repo for second HAI course assignment
 
 To run:
 
