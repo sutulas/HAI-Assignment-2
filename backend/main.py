@@ -116,10 +116,9 @@ def improve_response(query, df, spec, feedback):
 
 
 # Endpoint to interact with OpenAI API and generate the chart
-# Endpoint to interact with OpenAI API and generate the chart
 @app.post("/query", response_model=QueryResponse)
 async def query_openai(request: QueryRequest):
-    global global_df  # Access the global DataFrame
+    global global_df
 
     if global_df.empty:
         return QueryResponse(response="No dataset uploaded yet.")
