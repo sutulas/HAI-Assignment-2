@@ -5,11 +5,11 @@ import botAvatar from './images/bot-avatar.jpg';
 import * as d3 from 'd3-dsv'; // Import d3-dsv for CSV parsing
 import { VegaLite } from 'react-vega'; // Import Vega-Lite component
 
-const url = process.env.NODE_ENV === 'production' ? 'https://course-tools-demo.onrender.com/' : 'http://127.0.0.1:8000/';
+const url = process.env.NODE_ENV === 'production' ? 'https://sutulas.github.io/HAI-Assignment-2/' : 'http://127.0.0.1:8000/';
 
 function App() {
   const [message, setMessage] = useState("");
-  const [response, setResponse] = useState([{ type: "bot", text: "Hi! How can I help you?" }]);
+  const [response, setResponse] = useState([{ type: "bot", text: "Upload a CSV file and then ask visualization questions" }]);
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [csvData, setCsvData] = useState(null); // State to hold parsed CSV data
