@@ -56,16 +56,6 @@ def text_response(prompt):
     except Exception as e:
         return f"Error querying OpenAI: {e}"
 
-# def graph_response(prompt):
-#     try:
-#         response = client.chat.completions.create(
-#             model="gpt-3.5-turbo",
-#             messages=[{"role": "user", "content": prompt}]
-#         )
-#         return response.choices[0].message.content.strip()
-#     except Exception as e:
-#         return f"Error querying OpenAI: {e}"
-
 def generate_chart(query, df):
   prompt = f'''
     Dataset overview (top five rows): {df.head().to_markdown()}
@@ -126,6 +116,7 @@ def improve_response(query, df, spec, feedback):
 
 
 # Endpoint to interact with OpenAI API and generate the chart
+# Endpoint to interact with OpenAI API and generate the chart
 @app.post("/query", response_model=QueryResponse)
 async def query_openai(request: QueryRequest):
     global global_df  # Access the global DataFrame
@@ -134,9 +125,9 @@ async def query_openai(request: QueryRequest):
         return QueryResponse(response="No dataset uploaded yet.")
 
     # Create a prompt using the dataset
-    columns = global_df.columns.tolist() #\Examples of acceptable prompts: '{columns[0]} v {columns[1]}', 'display {columns[2]}', etc..
-    prompt = f"Does the following prompt include any of these {columns} or pertain to a dataset?\n\nRespond with just 'yes' or 'no'.\n\nHere is the prompt: {request.prompt}"
-    print(prompt)
+    columns = global_df.columns.tolist()
+    prompt = f"Is the following prompt relevant and answerable based on data with these columns {columns}? Any question that mentions the columns is answerable.\n\nRespond with just 'yes' or 'no'.\n\nHere is the prompt: {request.prompt}"
+
     try:
         # Initial query to check relevance
         response = client.chat.completions.create(
@@ -145,39 +136,51 @@ async def query_openai(request: QueryRequest):
         )
         response_text = response.choices[0].message.content.strip()
 
-        if True:#"yes" in response_text.lower():
+        if 'yes' in response_text.lower():  # Adjust based on actual check logic
             reduced_df = global_df.head()
-            spec = generate_chart(request.prompt, reduced_df)
-            print(spec)
 
-            feedback = get_feedback(request.prompt, reduced_df, spec)
-            print(feedback)
-            final_spec = improve_response(request.prompt, reduced_df, spec, feedback)
-            final_spec_parsed = json.loads(final_spec)
-            data_records = global_df.to_dict(orient='records')
+            # Attempt to generate the chart, allowing for one retry
+            for attempt in range(2):  # Try twice
+                try:
+                    spec = generate_chart(request.prompt, reduced_df)
 
-            final_spec_parsed['data'] = {
-                'values': data_records
-            }
-            
-            prompt = f"Provie a brief description of the following vega chart: \n\n {final_spec}"
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            response_text = response.choices[0].message.content.strip()
+                    feedback = get_feedback(request.prompt, reduced_df, spec)
 
-            # Convert the Altair chart to a dictionary (Vega-Lite spec)
-            chart = alt.Chart.from_dict(final_spec_parsed)
-            chart_json = chart.to_json()  # Convert to JSON format
-            
-            # Return the chart JSON to the frontend
-            return JSONResponse(content={"chart": json.loads(chart_json), "response": response_text})
+                    final_spec = improve_response(request.prompt, reduced_df, spec, feedback)
+                    final_spec_parsed = json.loads(final_spec)
+
+                    data_records = global_df.to_dict(orient='records')
+                    final_spec_parsed['data'] = {'values': data_records}
+
+                    # Brief description of the Vega chart
+                    prompt = f"Provide a short, 2 sentence description of the following vega chart: \n\n {final_spec}"
+                    response = client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[{"role": "user", "content": prompt}]
+                    )
+                    response_text = response.choices[0].message.content.strip()
+
+                    # Convert the Altair chart to a dictionary (Vega-Lite spec)
+                    chart = alt.Chart.from_dict(final_spec_parsed)
+                    chart_json = chart.to_json()  # Convert to JSON format
+
+                    # Return the chart JSON to the frontend
+                    return JSONResponse(content={"chart": json.loads(chart_json), "response": response_text})
+
+                except Exception as e:
+                    # Log the error and retry if it's not the last attempt
+                    print(f"Graph generation error, trying again...")
+                    if attempt == 1:  # If this was the last attempt
+                        return QueryResponse(response="Error: graph failed to load after two attempts, please try again.")
+
         else:
             return QueryResponse(response=f"The question \"{request.prompt}\" is not relevant to the dataset.")
 
     except Exception as e:
         return QueryResponse(response=f"Error querying OpenAI: {e}")
+
+
+
 
 # Endpoint to handle file uploads
 @app.post("/uploadfile/")

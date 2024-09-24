@@ -150,7 +150,7 @@ function App() {
 
   return (
     <div className="chat-container">
-      <h1 className="chat-title">AI Assistant</h1>
+      <h1 className="chat-title">AI Data Visualization Assistant</h1>
 
       <div
         className={`drag-and-drop-area ${dragActive ? 'active' : ''}`}
