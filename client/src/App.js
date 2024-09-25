@@ -5,7 +5,7 @@ import botAvatar from './images/bot-avatar.jpg';
 import * as d3 from 'd3-dsv'; // Import d3-dsv for CSV parsing
 import { VegaLite } from 'react-vega'; // Import Vega-Lite component
 
-const url = process.env.NODE_ENV === 'production' ? 'https://sutulas.github.io/HAI-Assignment-2/' : 'http://127.0.0.1:8000/';
+const url = process.env.NODE_ENV === 'production' ? 'https://hai-assignment-2.onrender.com/' : 'http://127.0.0.1:8000/';
 
 function App() {
   const [message, setMessage] = useState("");
