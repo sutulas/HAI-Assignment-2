@@ -30,7 +30,7 @@ function App() {
     const newMessage = { type: "user", text: message };
     setResponse([...response, newMessage]);
 
-    fetch(`${url}query`, {
+    fetch(`${url}query/`, {
       method: 'POST',
       body: JSON.stringify({ prompt: message }),
       headers: { 'Content-Type': 'application/json' },

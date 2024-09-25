@@ -24,7 +24,7 @@ global_df = pd.DataFrame()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to restrict allowed origins
+    allow_origins=["https://sutulas.github.io"],  # Adjust this to restrict allowed origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -105,7 +105,7 @@ def improve_response(query, df, spec, feedback):
 
 
 # Endpoint to interact with OpenAI API and generate the chart
-@app.post("/query", response_model=QueryResponse)
+@app.post("/query/", response_model=QueryResponse)
 async def query_openai(request: QueryRequest):
     global global_df
 
