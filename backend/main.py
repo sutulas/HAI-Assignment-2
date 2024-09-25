@@ -116,7 +116,8 @@ async def query_openai(request: QueryRequest):
 
     if global_df.empty:
         return QueryResponse(response="No dataset uploaded yet.")
-    return QueryResponse(response=f"Received prompt: {request.prompt}\n API key: {os.environ.get("OPENAI_API_KEY")}")
+    api_key = os.environ.get("OPENAI_API_KEY")
+    return QueryResponse(response=f"Received prompt: {request.prompt}\n API key: {api_key}")
     # Create a prompt using the dataset
     columns = global_df.columns.tolist()
     prompt = f"Is the following prompt relevant and answerable based on data with these columns {columns}? Any question that mentions the columns is answerable.\n\nRespond with just 'yes' or 'no'.\n\nHere is the prompt: {request.prompt}"
