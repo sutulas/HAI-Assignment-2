@@ -105,7 +105,11 @@ def improve_response(query, df, spec, feedback):
 
 
 # Endpoint to interact with OpenAI API and generate the chart
-@app.post("/query/", response_model=QueryResponse)
+@app.options("/query")
+async def preflight():
+    return JSONResponse(headers={"Access-Control-Allow-Methods": "POST"})
+
+@app.post("/query", response_model=QueryResponse)
 async def query_openai(request: QueryRequest):
     global global_df
 
