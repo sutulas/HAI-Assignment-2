@@ -24,7 +24,7 @@ global_df = pd.DataFrame()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://sutulas.github.io"],  # Adjust this to restrict allowed origins
+    allow_origins=["https://sutulas.github.io/HAI-Assignment-2/"],  # Adjust this to restrict allowed origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
